@@ -6,6 +6,18 @@ import sqlite3
 conn = sqlite3.connect('/home/gaixixon/student/student.db')
 cur = conn.cursor()
 
+class DB(object):
+    def __init__(self):
+        connect = sqlite3.connect('/home/gaixixon/student/student.db')
+        c = connect.cursor()
+        return
+    def list(self):
+        query = "SELECT * FROM student"
+        c.execute(query)
+        result = c.fetchall()
+        connect.close()
+        return result
+
 @app.route('/')
 def hello_world():
     return render_template('index.html')
@@ -16,6 +28,11 @@ def studentform():
 
 @app.route('/studentlist')
 def studentlist():
+    result = DB.list
+    return render_template('studentlist.html',result=result)
+
+@app.route('/studentlists')
+def studentlists():
     global conn, cur
     result = cur.execute(''' SELECT * FROM student ''')
     result = cur.fetchall()

@@ -3,20 +3,31 @@
 from flask import Flask, render_template, request
 app = Flask(__name__)
 import sqlite3
-conn = sqlite3.connect('/home/gaixixon/student/student.db')
-cur = conn.cursor()
 
-class DB(object):
-    def __init__(self):
-        connect = sqlite3.connect('/home/gaixixon/student/student.db')
-        c = connect.cursor()
+class DBase(object):
+    def connect(self):
+        self.conn = sqlite3.connect('/home/gaixixon/student/student.db')
+        self.cur = self.conn.cursor()
         return
     def list(self):
-        query = "SELECT * FROM student"
-        c.execute(query)
-        result = c.fetchall()
-        connect.close()
-        return result
+        self.connect()
+        try:
+            query = "SELECT * FROM student"
+            self.cur.execute(query)
+            return self.cur.fetchall()
+        finally:
+            self.conn.close()
+
+    def Add(self,result):
+        self.connect()
+        try:
+            query = """INSERT INTO student (name,dob,tel,address) VALUES (?,?,?,?)"""
+            self.cur.execute(query,(result['Name'],result['Tel'],result['DOB'],result['Address']))
+            self.conn.commit()
+        finally:
+            self.conn.close()
+
+DB = DBase()
 
 @app.route('/')
 def hello_world():
@@ -28,22 +39,15 @@ def studentform():
 
 @app.route('/studentlist')
 def studentlist():
-    result = DB.list
-    return render_template('studentlist.html',result=result)
-
-@app.route('/studentlists')
-def studentlists():
-    global conn, cur
-    result = cur.execute(''' SELECT * FROM student ''')
-    result = cur.fetchall()
+    result = DB.list()
     return render_template('studentlist.html',result=result)
 
 @app.route('/addstudent', methods=['POST' , 'GET'])
 def addstudent():
-    if request.method == 'POST':
-        result = request.form.to_dict()
-        global conn,cur
-        cur.execute(''' INSERT INTO student (name,tel,dob,address) VALUES (?,?,?,?)''', (result["Name"],result["Tel"],result["Address"],result["DOB"]))
-        #cur.commit()
-    return render_template('index.html')
-conn.commit()
+    try:
+        if request.method == 'POST':
+            result = request.form.to_dict()
+            DB.Add(result)
+            return render_template('foo.html',result = result)
+    except Exception as e:
+        return render_template('foo.html',result = e)

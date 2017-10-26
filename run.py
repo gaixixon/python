@@ -27,7 +27,6 @@ class DBase(object):
             self.conn.close()
 
 DB = DBase()
-
 @app.route('/')
 def hello_world():
     return render_template('index.html')
